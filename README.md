@@ -3,6 +3,7 @@
 **An AI songwriting companion that helps you write, polish, and perform your own lyrics, without writing the song for you.**
 
 Built for **GeNarrative Clash 2026** 
+            [**Domain** : *AI MUSIC & SOUND STUDIO*]
 
 - **Demo video:** https://drive.google.com/file/d/1ayRK_fzfrPf82EMVpfs7xVxsDYkkgRTS/view?usp=drivesdk 
 - **Team:** **Algo-rythm**: Adrija Adhikary, Samadrita Ghosh, Snehil Raj Singh, Shivam Jain
