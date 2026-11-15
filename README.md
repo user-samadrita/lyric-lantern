@@ -110,9 +110,9 @@ Planned for the 6-hour live building sprint at the TIU Campus finale. Each one f
 
 | Name | Contribution |
 |------|--------------|
-| **Adrija Adhikary** (Team Lead) | Project idea, Devfolio registration, team host |
+| **Adrija Adhikary** (Team Lead) | Project idea, Devfolio registration, team host, demo video voice over|
 | **Samadrita Ghosh** | Coding, project structure, Streamlit app development |
-| **Snehil Raj Singh** | UI description and design direction, demo video voice-over |
+| **Snehil Raj Singh** | UI description and design direction, demo video editing |
 | **Shivam Jain** | Feature suggestions, screen recording of the demo |
 
 
