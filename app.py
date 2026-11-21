@@ -5,7 +5,7 @@ from google import genai
 from google.genai import types
 
 load_dotenv()
-client = genai.Client(
+client  = genai.Client(
     api_key=os.getenv("GEMINI_API_KEY"),
     http_options=types.HttpOptions(timeout=45000),
 )
@@ -24,6 +24,21 @@ st.set_page_config(page_title="Lyric Lantern", page_icon="🏮", layout="wide")
 
 import lantern_style
 lantern_style.apply()
+import auth
+import vault
+user = auth.gate()
+top_left, top_mid, top_right = st.columns([4, 2, 1])
+with top_left:
+    st.caption("Signed in as " + user)
+with top_mid:
+    LANG = st.selectbox(
+        "Writing language",
+        ["Auto (match my writing)", "English", "Bengali", "Hindi", "Hinglish"],
+        key="lang_choice",
+    )
+with top_right:
+    if st.button("Log out", key="logout_btn"):
+        auth.logout()
 
 
 def desk(name, hint, instruction, label):
@@ -39,15 +54,29 @@ def desk(name, hint, instruction, label):
                 with st.spinner("The lantern is glowing..."):
                     result = ask_ai(instruction + "\n\nWriter's text:\n" + text)
                 st.markdown(result)
+                if not result.startswith("The lantern flickered"):
+                    vault.log_action(user, name, text, result)
+                    st.session_state.pop("restore_" + name, None)
             else:
                 st.info("Write something first.")
+        elif st.session_state.get("restore_" + name):
+            st.caption("Restored from your history")
+            st.markdown(st.session_state["restore_" + name])
         else:
             st.caption("Your suggestions will appear here.")
+       
 
 
-RULES = " Keep it short and clear. Never copy existing songs or imitate a living writer's lyrics."
-tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11 = lantern_style.pages(["Co-Write", "Rhythm", "Rhyme", "Cliché", "Block Breaker", "Voice Switch", "Stage Mode", "Photo Mood", "Chords", "Hum", "Collab"])
+LANG_NOTES = {
+    "Auto (match my writing)": " Detect the language of the writer's text (English, Bengali, Hindi or Hinglish) and reply in that same language and script. Rhyme and count syllables by how the words sound in that language.",
+    "English": " Reply in English.",
+    "Bengali": " The writer works in Bengali. Write all lyric lines, rhymes and examples in Bengali script (বাংলা). Short labels may stay in English. Rhyme and count syllables by how the words sound in Bengali.",
+    "Hindi": " The writer works in Hindi. Write all lyric lines, rhymes and examples in Devanagari script (हिन्दी). Short labels may stay in English. Rhyme and count syllables by how the words sound in Hindi.",
+    "Hinglish": " The writer works in Hinglish: Hindi written in the Roman alphabet, mixed with English, like everyday texting. Write all lyric lines, rhymes and examples in Hinglish (Roman script, no Devanagari). Short labels may stay in English. Rhyme by how the words sound.",
+}
+RULES = " Keep it short and clear. Never copy existing songs or imitate a living writer's lyrics." + LANG_NOTES[LANG]
 
+tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11, tab12, tab13 , vault_tab= lantern_style.pages(["Co-Write", "Rhythm", "Rhyme", "Cliché", "Block Breaker", "Voice Switch", "Stage Mode", "Photo Mood", "Chords", "Hum", "Collab", "Memory to Song", "Genre Blender", "Hook Vault"])
 with tab1:
     desk("cowrite", "Write one line. I'll offer 3 ways to continue it.",
          "You are a songwriting co-writer. The writer gave one line. Offer 3 different directions to continue it (one emotional, one imagery-based, one with a twist), 2 lines each. Label them Direction 1, 2, 3." + RULES,
@@ -190,3 +219,27 @@ if (!P.document.getElementById('lantern-audio-js')) {
 """, height=0)
 import more_features
 more_features.add_more([tab8, tab9, tab10, tab11], ask_ai, client, types, MODEL, RULES)
+
+with tab12:
+    desk("memory", "Describe a real memory. I'll turn it into a song concept.",
+         "You are a songwriting co-writer. The writer shared a personal memory. Give: 1) a song title, 2) the mood in a few words, 3) four lyric images taken from the details they gave, 4) a one-line hook idea, 5) a two-sentence direction for the first verse. Do not write the full verse." + RULES,
+         "Your memory")
+
+GENRES = ["Baul folk", "Lo-fi", "Pop", "Rock", "Jazz", "Indian classical", "Rabindra Sangeet", "Hip-hop", "EDM", "Ballad", "Qawwali", "Indie"]
+
+with tab13:
+    st.markdown('<div class="card glow"><h3>Genre Blender</h3><p>Pick two genres and get a blended style guide for your song.</p></div>', unsafe_allow_html=True)
+    g1 = st.selectbox("First genre", GENRES, index=0, key="gb_1")
+    g2 = st.selectbox("Second genre", GENRES, index=1, key="gb_2")
+    gb_mood = st.text_input("Mood or theme (optional)", key="gb_mood")
+    if st.button("Blend the genres", key="gb_btn"):
+        if g1 == g2:
+            st.info("Pick two different genres.")
+        else:
+            with st.spinner("The lantern is blending the sounds..."):
+                out = ask_ai("You are a music producer and songwriting coach. Blend these two genres: " + g1 + " and " + g2 + ". Mood or theme: " + (gb_mood or "any") + ". Give a short style guide with these headings: Rhythm and tempo, Instruments, Lyric tone, Chord ideas, One-line song concept. Do not write full lyrics." + RULES)
+            st.markdown(out)
+
+            import vault
+with vault_tab:
+    vault.render(user)    

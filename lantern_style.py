@@ -368,16 +368,15 @@ def _pick(i):
 def _toggle():
     st.session_state["tb_open"] = not st.session_state["tb_open"]
 
-
 def pages(names):
     labels = ["Home"] + list(names)
+    st.session_state["page_names"] = list(names)
     st.session_state.setdefault("tool_idx", 0)
     st.session_state.setdefault("tb_open", True)
     idx = st.session_state["tool_idx"]
     is_open = st.session_state["tb_open"]
 
-    css = ",".join(".st-key-page_" + str(i) for i in range(len(labels)) if i != idx)
-    css += "{display:none !important;}"
+    css = ".st-key-page_bin{display:none !important;}"
     css += ".stApp .st-key-tool_" + str(idx) + " .stButton > button{background:rgba(217,164,65,0.92) !important;border-bottom-color:transparent !important;padding-left:1.9rem !important;}"
     css += ".stApp .st-key-tool_" + str(idx) + " .stButton > button p{color:#2f1f15 !important;font-weight:500 !important;}"
     if is_open:
@@ -393,7 +392,18 @@ def pages(names):
         for i, label in enumerate(labels):
             st.button(label, key="tool_" + str(i), on_click=_pick, args=(i,))
         st.markdown("<style>" + css + "</style>", unsafe_allow_html=True)
-    boxes = [st.container(key="page_" + str(i)) for i in range(len(labels))]
+
+    # Only the open page sits in the normal page flow. All other pages are
+    # tucked into one hidden bin placed below it, so they add no extra space.
+    active = st.container(key="page_" + str(idx))
+    bin_box = st.container(key="page_bin")
+    boxes = []
+    for i in range(len(labels)):
+        if i == idx:
+            boxes.append(active)
+        else:
+            with bin_box:
+                boxes.append(st.container(key="page_" + str(i)))
     with boxes[0]:
         st.markdown(HOME, unsafe_allow_html=True)
         st.button("Start with " + names[0], key="home_go", on_click=_pick, args=(1,))
